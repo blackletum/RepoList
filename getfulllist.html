@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Repositories</title>
+</head>
+<body>
+  <input type="text" id="usernameInput" placeholder="Enter GitHub username" />
+  <button id="fetchReposBtn">Fetch Repositories</button>
+  <ul id="reposList"></ul>
+
+  <script>
+    document.getElementById('fetchReposBtn').addEventListener('click', () => {
+      const username = document.getElementById('usernameInput').value.trim();
+      if (username) {
+        fetchAllRepositories(username);
+      } else {
+        alert('Please enter a GitHub username.');
+      }
+    });
+
+    async function fetchAllRepositories(username) {
+      const reposList = document.getElementById('reposList');
+      reposList.innerHTML = "";
+
+      let url = `https://api.github.com/users/${username}/repos?per_page=100`;
+
+      while (url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+          reposList.innerHTML = `<li>Error fetching repositories for user: ${username}</li>`;
+          return;
+        }
+
+        const data = await response.json();
+
+        data.forEach(repo => {
+          const li = document.createElement('li');
+          // Show the full clone URL or HTML URL as needed
+          li.innerHTML = `<a href="${repo.html_url}" target="_blank">${repo.html_url}</a>`;
+          reposList.appendChild(li);
+        });
+
+        const linkHeader = response.headers.get('Link');
+        if (linkHeader) {
+          const match = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+          url = match ? match[1] : null;
+        } else {
+          url = null;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
